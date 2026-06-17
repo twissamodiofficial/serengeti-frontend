@@ -19,6 +19,9 @@ const SPECIES_LABELS = {
 export default function App() {
   const [imagePreview, setImagePreview] = useState(null);
   const [predictions, setPredictions] = useState(null);
+  const [overlay, setOverlay] = useState(null);
+  const [predictedClass, setPredictedClass] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -32,6 +35,9 @@ export default function App() {
 
     setError(null);
     setPredictions(null);
+    setOverlay(null);
+    setPredictedClass(null);
+    setShowHeatmap(false);
     setImagePreview(URL.createObjectURL(file));
     setLoading(true);
 
@@ -50,6 +56,12 @@ export default function App() {
 
       const data = await response.json();
       setPredictions(data.predictions);
+      if (data.overlay) {
+        setOverlay(`data:image/jpeg;base64,${data.overlay}`);
+      }
+      if (data.predicted_class) {
+        setPredictedClass(data.predicted_class);
+      }
     } catch (err) {
       setError('Could not reach the classifier. The model may be waking up from sleep — try again in a moment.');
     } finally {
@@ -74,7 +86,7 @@ export default function App() {
       <header className="header">
         <div>
           <h1 className="title">Serengeti field classifier</h1>
-          <p className="subtitle">CAMERA TRAP SPECIES ID &middot; RESNET18</p>
+          <p className="subtitle">CAMERA TRAP SPECIES ID · RESNET18</p>
         </div>
         <span className="badge">11 CLASSES</span>
       </header>
@@ -88,7 +100,11 @@ export default function App() {
             onDrop={handleDrop}
           >
             {imagePreview ? (
-              <img src={imagePreview} alt="Uploaded specimen" className="preview-image" />
+              <img
+                src={showHeatmap && overlay ? overlay : imagePreview}
+                alt={showHeatmap ? 'GradCAM attention heatmap' : 'Uploaded specimen'}
+                className="preview-image"
+              />
             ) : (
               <div className="dropzone-empty">
                 <span className="dropzone-icon">&#128247;</span>
@@ -104,18 +120,43 @@ export default function App() {
             />
           </div>
 
-          <p className="hint">
-            Best results on camera-trap style photos — animals at a distance,
-            natural outdoor settings. Close-up posed wildlife photography may
-            not classify accurately.
-          </p>
+          {overlay && (
+            <div className="toggle-row">
+              <button
+                className={`toggle-btn ${!showHeatmap ? 'active' : ''}`}
+                onClick={() => setShowHeatmap(false)}
+              >
+                Original
+              </button>
+              <button
+                className={`toggle-btn ${showHeatmap ? 'active' : ''}`}
+                onClick={() => setShowHeatmap(true)}
+              >
+                Attention map
+              </button>
+              {showHeatmap && (
+                <span className="toggle-label">
+                  Where the model looked to identify{' '}
+                  <strong>{SPECIES_LABELS[predictedClass] || predictedClass}</strong>
+                </span>
+              )}
+            </div>
+          )}
+
+          {!overlay && (
+            <p className="hint">
+              Best results on camera-trap style photos — animals at a distance,
+              natural outdoor settings. Close-up posed wildlife photography may
+              not classify accurately.
+            </p>
+          )}
         </section>
 
         <section className="results-panel">
-          <p className="results-label">FIELD LOG &mdash; TOP 3 MATCHES</p>
+          <p className="results-label">FIELD LOG — TOP 3 MATCHES</p>
 
           {loading && (
-            <p className="status-text">Reading specimen&hellip;</p>
+            <p className="status-text">Reading specimen…</p>
           )}
 
           {error && (
@@ -156,7 +197,7 @@ export default function App() {
         <a href="https://lila.science/datasets/snapshot-serengeti" target="_blank" rel="noreferrer">
           Snapshot Serengeti
         </a>{' '}
-        dataset &middot; 84% test accuracy across 11 classes &middot;{' '}
+        dataset · 84% test accuracy across 11 classes ·{' '}
         <a href="https://github.com/twissamodi/serengeti" target="_blank" rel="noreferrer">
           read the full write-up
         </a>
