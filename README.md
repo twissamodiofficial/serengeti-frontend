@@ -1,16 +1,52 @@
-# React + Vite
+# Serengeti Field Classifier — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React frontend for the [Serengeti wildlife classifier API](https://github.com/twissamodi/serengeti-classifier-api) — upload a camera trap image, get back a species
+prediction with confidence, and see exactly where in the image the model
+looked to make that call.
 
-Currently, two official plugins are available:
+**Live:** [serengeti-frontend.vercel.app](https://serengeti-frontend.vercel.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Part of a larger project covering the full pipeline from raw dataset to
+deployed system:
+[training repo](https://github.com/twissamodi/serengeti) ·
+[backend repo](https://github.com/twissamodi/serengeti-classifier-api)
 
-## React Compiler
+## What it does
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Upload or drag-and-drop a wildlife image
+- Calls the deployed FastAPI backend's `/predict` endpoint
+- Displays the top-3 predicted species with confidence bars
+- Toggles between the original image and a GradCAM attention-map overlay,
+  showing which regions of the image the model actually used to make its
+  prediction
+- Sets honest expectations up front: the model is trained on camera-trap
+  style imagery and is explicit about working best on that kind of photo
 
-## Expanding the ESLint configuration
+## Design
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Styled around the subject rather than a generic dashboard look — an earthy,
+field-notebook palette and a "field log" readout for predictions instead of
+plain progress bars, since this is a wildlife identification tool, not a
+SaaS product.
+
+## Stack
+
+React (Vite) · plain CSS · deployed on Vercel
+
+## Running locally
+
+```bash
+npm install
+npm run dev
+```
+
+Update the `API_URL` constant at the top of `src/App.jsx` if pointing at a
+different backend deployment than the default.
+
+## Build & deploy
+
+```bash
+npm run build
+```
+
+Connected to Vercel for automatic deployment on push to `main`.
